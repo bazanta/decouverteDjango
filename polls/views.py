@@ -136,3 +136,7 @@ def reponseQuestionnaire(request, questionnaire_id):
 	return HttpResponseRedirect(reverse('polls:resultsQuestionnaire', args=(questionnaire.id,)))
 # end def
 
+###################
+## GENERTION PDF ##
+###################
+    

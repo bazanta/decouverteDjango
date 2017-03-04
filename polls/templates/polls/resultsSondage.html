@@ -80,10 +80,15 @@
 
 
 {% block javascript %}
+<!-- highcharts (generation de graphique) -->
 <script src="https://code.highcharts.com" type="text/javascript"></script>
 <script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
 <script src="https://code.highcharts.com/modules/data.js" type="text/javascript"></script>
 <script src="https://code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
+
+<!-- pdfmake (generation de PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.26/pdfmake.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.26/vfs_fonts.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 
@@ -105,8 +110,6 @@
 		$('span.resultat').each(function(){
 			resultats.push( (parseInt($(this).text())*100)/nbRes );
 		});
-		
-		
 		
 		Highcharts.chart('container', {
 			data: {
@@ -134,7 +137,91 @@
 			}
 		});
 	
-	
+		var structureReponse = [];
+		{% for choice in question.choice_set.all %}
+			structureReponse["{{ choice.choice_text}}"] = [];
+		{% endfor %}
+		{% for reponse in question.reponse_set.all|dictsort:'nom' %}
+			structureReponse["{{ reponse.choice.choice_text }}"].push("{{ reponse.nom|upper }}");
+		{% endfor %}
+
+		var content = [];
+		structureReponse.forEach(function(index, vals) {
+			var dataRow = [];
+
+			columns.forEach(function(column) {
+				dataRow.push(row[column].toString());
+			})
+
+			body.push(dataRow);
+    	});
+
+
+		var docDefinition = {
+			content: [
+				{ 
+					text: '{{ question.question_text }}', 
+					style: 'header', 
+					alignment: 'center' 
+				},
+				{
+					text: " "
+				},
+				{
+					text: 'Listes des résultats trié par ordre alphabétique',
+					style: 'header',
+					bold: false
+				},
+				{
+					columns: [
+						{
+							text: "Choix 1",
+						},
+						{
+							text: "Choix 1",
+						},
+						{
+							text: "Choix 2",
+						}
+					]
+				},
+				{
+					columns: [
+						{
+							ul: [
+								'item 1',
+								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
+							]
+						},
+						{
+							ul: [
+								'item 1',
+								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
+							]
+						},
+						{
+							text: "Choix 2",
+							ul: [
+								'item 1',
+								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
+							]
+						}
+					]
+				},
+			],
+			styles: {
+				header: {
+					fontSize: 18,
+					bold: true,
+					alignment: 'justify'
+				}
+			}
+		};
+
+		$("#resultatPDF").click(function(){
+			pdfMake.createPdf(docDefinition).download('sondage.pdf');
+		});
+				
 	});
 
 </script>

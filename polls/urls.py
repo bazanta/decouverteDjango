@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from wkhtmltopdf.views import PDFTemplateView
 
 from . import views
 
