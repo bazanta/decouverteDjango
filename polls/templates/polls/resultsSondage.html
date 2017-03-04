@@ -1,0 +1,141 @@
+{% extends "polls/layout.html" %}
+
+{% block menuSondage %}
+	class="active"
+{% endblock menuSondage %}
+
+{% block page %}
+<div class="container">
+	<div class="row">
+	
+		<div class="col-lg-12">
+			<h1> {{ question.question_text }} </h1>
+		</div>
+		
+	</div>
+	
+	<div class="row">
+	
+		<div class="col-lg-6">
+			<h2>Récapitulatif des votes par choix</h2>
+
+			<div>
+				{% if question.choice_set.all|length > 1 %}
+				<ul>
+					{% for choice in question.choice_set.all %}
+						<li>
+							<span class="choice">
+								{{ choice.choice_text }} 
+							</span>
+							--
+							<span class="resultat">
+								{{ choice.votes }} 
+							</span>
+							vote{{ choice.votes|pluralize }}
+						</li>
+					{% endfor %}
+				</ul>
+				{% endif %}
+			</div>
+		</div>
+
+		<div class="col-lg-6">
+			<h2>Détail des derniers votes</h2>
+
+			<div>
+				{% if question.reponse_set.all|length > 1 %}
+				<ul>
+				{% for reponse in question.reponse_set.all|dictsortreversed:'id'|slice:":5" %}
+					<li>
+						{{ reponse.nom|upper }} -- {{ reponse.choice.choice_text }}
+					</li>
+					{% if  forloop.counter == 5 %}
+						<li> ... </li>
+					{% endif %}
+				{% endfor %}
+				</ul>
+				{% endif %}
+			</div>
+		</div>		
+		
+		<div class="col-lg-12 actions">
+			<a href="{% url 'polls:detail' question.id %}" class="btn btn-primary">
+				Voter à nouveau
+			</a>
+
+			<a href="#" id="resultatPDF" class="btn btn-default">
+				Liste des résultats en PDF
+			</a>
+		</div>
+
+		<div class="col-lg-12">
+			<h2> Fréquence des votes </h2>
+
+			<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+		</div>
+
+	</div>
+</div>
+{% endblock page %}
+
+
+{% block javascript %}
+<script src="https://code.highcharts.com" type="text/javascript"></script>
+<script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
+<script src="https://code.highcharts.com/modules/data.js" type="text/javascript"></script>
+<script src="https://code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	// Après le chargement du DOM
+	$(function(){
+	
+		var labels = ['null'];
+		$('span.choice').each(function(){
+			console.log($(this).text());
+			labels.push($(this).text());
+		});
+		var resultats = [];
+		var question = $('h1').text();
+		resultats.push('choix');
+		var nbRes= 0;
+		$('span.resultat').each(function(){
+			nbRes += parseInt($(this).text());
+		});
+		$('span.resultat').each(function(){
+			resultats.push( (parseInt($(this).text())*100)/nbRes );
+		});
+		
+		
+		
+		Highcharts.chart('container', {
+			data: {
+				rows: [
+				    labels,
+				    resultats
+				]
+			},
+			chart: {
+				type: 'column'
+			},
+			title: {
+				text: 'Résultat du sondage : '+question
+			},
+			yAxis: {
+				title: {
+				    text: 'frequence'
+				}
+			},
+			tooltip: {
+				formatter: function () {
+				    return "<b>"+this.series.name+"<\/b> <br/>" +
+				        this.point.y + '% ' + this.point.name.toLowerCase();
+				}
+			}
+		});
+	
+	
+	});
+
+</script>
+{% endblock javascript %}

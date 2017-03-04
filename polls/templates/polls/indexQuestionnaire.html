@@ -1,0 +1,31 @@
+{% extends "polls/layout.html" %}
+
+{% block menuQuest %}
+	class="active"
+{% endblock menuQuest %}
+
+{% block page %}
+<div class="container">
+	<div class="row">
+		<br><br>
+		<div class="col-lg-12">			
+			<h4 class="fa fa-check-circle-o">
+				Questionnaire
+			</h4>
+			{% if questionnaires %}
+				<ul>
+				{% for questionnaire in questionnaires %}
+					<li>
+						<a href="{% url 'polls:detailQuestionnaire' questionnaire.id %}">{{ questionnaire.label }}</a>
+					</li>
+				{% endfor %}
+				</ul>
+			{% else %}
+				<p>Pas de questionnaires disponibles.</p>
+			{% endif %}
+		</div>
+	</div>
+	<br>
+	<br>
+</div>
+{% endblock page %}

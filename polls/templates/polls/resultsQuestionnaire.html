@@ -1,0 +1,136 @@
+{% extends "polls/layout.html" %}
+
+{% block menuQuest %}
+	class="active"
+{% endblock menuQuest %}
+
+{% block page %}
+<div class="container">
+	<div class="row">
+	
+		<div class="col-lg-12">
+			<h1> {{ questionnaire.label }} </h1>
+		</div>
+		
+	</div>
+	
+	<div class="row">
+	
+		<div class="col-lg-12">
+			<h2>Récapitulatif des dernières réponses</h2>
+
+			<div>
+				{% if questionnaire.reponsequestionnaires_set.all|length > 1 %}
+					<ul>
+					{% for reponseQuest in questionnaire.reponsequestionnaires_set.all|dictsortreversed:'id'|slice:":5" %}
+						<li>
+							{{ reponseQuest.nom|upper }}
+							{% if reponseQuest.reponsequestionquestionnaire_set.all|length > 1 %}
+							<ul>
+								{% for reponse in reponseQuest.reponsequestionquestionnaire_set.all %}
+									<li>
+										{{ reponse.question }} - {{ reponse.reponse }}
+									</li>
+								{% endfor %}
+							</ul>
+							{% endif %}
+						</li>
+						{% if  forloop.counter == 5 %}
+							<li> ... </li>
+						{% endif %}
+					{% endfor %}
+					</ul>
+				{% endif %}
+			</div>
+		</div>		
+		
+		<div class="col-lg-12 actions">
+			<a href="{% url 'polls:detailQuestionnaire' questionnaire.id %}" class="btn btn-primary">
+				Répondre à nouveau
+			</a>
+
+			<a href="#" id="resultatPDF" class="btn btn-default">
+				Liste des résultats en PDF
+			</a>
+		</div>
+
+		<div class="col-lg-12">
+			<h2> Boite à moustache des poids actuels </h2>
+
+			<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+		</div>
+
+	</div>
+</div>
+{% endblock page %}
+
+
+{% block javascript %}
+<script src="https://code.highcharts.com" type="text/javascript"></script>
+<script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
+<script src="https://code.highcharts.com/modules/data.js" type="text/javascript"></script>
+<script src="https://code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	// Après le chargement du DOM
+	$(function(){
+		
+		Highcharts.chart('container', {
+			chart: {
+				type: 'boxplot'
+			},
+
+			title: {
+				text: 'Boite à moustache des poids actuels'
+			},
+
+			legend: {
+				enabled: false
+			},
+
+			xAxis: {
+				categories: ['1'],
+				title: {
+				    text: ''
+				}
+			},
+
+			yAxis: {
+				title: {
+				    text: 'Poids en kg'
+				}
+			},
+
+			series: [
+				{
+					name: 'Poids',
+					data: [
+						[760, 801, 848, 895, 965],
+					],
+				},
+				{
+					name: 'Outlier',
+					color: Highcharts.getOptions().colors[0],
+					type: 'scatter',
+					data: [ // x, y positions where 0 is the first category
+						[0, 644],
+					],
+					marker: {
+						fillColor: 'white',
+						lineWidth: 1,
+						lineColor: Highcharts.getOptions().colors[0]
+					},
+					tooltip: {
+						pointFormat: 'Poids: {point.y}'
+					}
+				}
+			]
+
+		});
+	
+	
+	});
+
+</script>
+{% endblock javascript %}

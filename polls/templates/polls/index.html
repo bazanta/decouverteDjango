@@ -1,0 +1,80 @@
+{% extends "polls/layout.html" %}
+
+{% block menuHome %}
+	class="active"
+{% endblock menuHome %}
+
+{% block page %}
+<div id="headerwrap">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-8 col-lg-offset-2">
+				<h1> Il faut faire attention à notre santé ! </h1>
+				<h2> Aidez nous en répondant aux sondages, questionnaires. </h2>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="container">
+	<div class="row">
+		<div class="col-lg-6">		
+			<div class="card">
+				<div class="card-header">
+					<h4 class="fa fa-check-circle-o">
+						Derniers Sondages
+					</h4>
+				</div>
+				<div class="card-body">
+				{% if latest_sondage_list %}
+					<ul>
+					{% for question in latest_sondage_list %}
+						<li>
+							<a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+						</li>
+					{% endfor %}
+					</ul>
+				{% else %}
+					<p>Pas de sondages disponibles.</p>
+				{% endif %}
+				</div>
+				<div class="card-footer">
+					<a href="{% url 'polls:indexSondage' %}" class="btn btn-primary">
+						Plus de sondages
+					</a> 
+				</div>
+			</div>
+		</div>
+
+
+		<div class="col-lg-6">		
+			<div class="card">
+				<div class="card-header">
+					<h4 class="fa fa-question-circle">
+						Derniers Questionnaires
+					</h4>
+				</div>
+				<div class="card-body">
+					{% if latest_questionnaire_list %}
+						<ul>
+						{% for questionnaire in latest_questionnaire_list %}
+							<li>
+								<a href="{% url 'polls:detailQuestionnaire' questionnaire.id %}">{{ questionnaire.label }}</a>
+							</li>
+						{% endfor %}
+						</ul>
+					{% else %}
+						<p>Pas de questionnaires disponibles.</p>
+					{% endif %}
+				</div>
+				<div class="card-footer">
+					<a href="{% url 'polls:indexQuestionnaire' %}" class="btn btn-primary">
+						Plus de questionnaires
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock page %}

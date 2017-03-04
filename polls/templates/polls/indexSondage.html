@@ -1,0 +1,31 @@
+{% extends "polls/layout.html" %}
+
+{% block menuSondage %}
+	class="active"
+{% endblock menuSondage %}
+
+{% block page %}
+<div class="container">
+	<div class="row">
+		<br><br>
+		<div class="col-lg-12">
+			<h4 class="fa fa-check-circle-o">
+				Sondages
+			</h4>
+			{% if sondages %}
+				<ul>
+				{% for question in sondages %}
+					<li>
+						<a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+					</li>
+				{% endfor %}
+				</ul>
+			{% else %}
+				<p>Pas de sondages disponibles.</p>
+			{% endif %}
+		</div>
+	</div>
+	<br>
+	<br>
+</div>
+{% endblock page %}

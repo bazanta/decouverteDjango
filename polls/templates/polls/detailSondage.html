@@ -1,0 +1,39 @@
+{% extends "polls/layout.html" %}
+
+{% block menuSondage %}
+	class="active"
+{% endblock menuSondage %}
+
+{% block page %}
+<div class="container">
+	<div class="row">
+		<h1>{{ question.question_text }}</h1>
+
+		{% if error_message %}
+			<p>
+				<strong>{{ error_message }}</strong>
+			</p>
+		{% endif %}
+
+		<form action="{% url 'polls:vote' question.id %}" method="post">
+			{% csrf_token %}
+			{% for choice in question.choice_set.all %}
+				<input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+				<label for="choice{{ forloop.counter }}">
+					{{ choice.choice_text }}
+				</label>
+				<br />
+			{% endfor %}
+
+			<br />
+			<label for="nom">
+				Entrer votre nom
+			</label>
+			<input type="text" name="nom" id="nom" value="" />
+
+			<input type="submit" value="Vote" />
+		</form>
+		
+	</div>
+</div>
+{% endblock page %}
