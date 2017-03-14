@@ -26,8 +26,17 @@ div#footer {
 	text-transform: uppercase;
 }
 
+.hide {
+	display: none;
+}
+
 #identification {
 	margin-top: 40px;
+	margin-bottom: 40px;
+}
+
+#questionnaire {
+	margin-top: 30px;
 }
 
 #actions {
@@ -38,6 +47,21 @@ div#footer {
 	padding: 10px;
 	text-transform: uppercase;
 	font-size: 20px;
+}
+
+#mesactions .btn {
+	margin: 8px;
+	padding: 10px;
+	font-size: 18px;
+}
+
+table {
+	background-color: white;
+	margin-top: 10px;
+}
+
+table th {
+	background-color: #aaa;
 }
 
 /*********/

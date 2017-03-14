@@ -13,13 +13,33 @@
 				Questionnaire
 			</h4>
 			{% if questionnaires %}
-				<ul>
+				<table class="table table-bordered">
+					<tr>
+						<th>
+							Nom questionnaire
+						</th>
+						<th>
+							Date publication
+						</th>
+						<th style="width: 200px;">
+							Actions
+						</th>
+					</tr>
 				{% for questionnaire in questionnaires %}
-					<li>
-						<a href="{% url 'polls:detailQuestionnaire' questionnaire.id %}">{{ questionnaire.label }}</a>
-					</li>
+					<tr>
+						<td>
+							{{ questionnaire.label }}
+						</td>
+						<td>
+							{{ questionnaire.pub_date }}
+						</td>
+						<td>
+							<a href="{% url 'polls:detailQuestionnaire' questionnaire.id %}" class="btn btn-primary">Répondre</a>
+							<a href="{% url 'polls:resultsQuestionnaire' questionnaire.id %}" class="btn btn-default">Résultat</a>
+						</td>						
+					</tr>
 				{% endfor %}
-				</ul>
+				</table>
 			{% else %}
 				<p>Pas de questionnaires disponibles.</p>
 			{% endif %}

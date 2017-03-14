@@ -58,14 +58,19 @@
 			</div>
 		</div>		
 		
-		<div class="col-lg-12 actions">
-			<a href="{% url 'polls:detail' question.id %}" class="btn btn-primary">
-				Voter à nouveau
-			</a>
-
-			<a href="#" id="resultatPDF" class="btn btn-default">
-				Liste des résultats en PDF
-			</a>
+		<div class="col-lg-12" id="mesactions">
+			<div class="row">
+				<div class="col-lg-6">
+					<a href="{% url 'polls:detail' question.id %}" class="btn btn-primary">
+						Voter à nouveau
+					</a>
+				</div>
+				<div class="col-lg-6">
+					<a href="#" id="resultatPDF" class="btn btn-default">
+						Liste des résultats en PDF
+					</a>				
+				</div>
+			</div>
 		</div>
 
 		<div class="col-lg-12">
@@ -95,9 +100,12 @@
 	// Après le chargement du DOM
 	$(function(){
 	
+		/***************************/
+		/* Génération du graphique */
+		/***************************/
+	
 		var labels = ['null'];
 		$('span.choice').each(function(){
-			console.log($(this).text());
 			labels.push($(this).text());
 		});
 		var resultats = [];
@@ -127,7 +135,9 @@
 			yAxis: {
 				title: {
 				    text: 'frequence'
-				}
+				},
+				min: 0,
+				max: 100
 			},
 			tooltip: {
 				formatter: function () {
@@ -137,6 +147,10 @@
 			}
 		});
 	
+		/*********************/
+		/* Génération du PDF */
+		/*********************/
+
 		var structureReponse = [];
 		{% for choice in question.choice_set.all %}
 			structureReponse["{{ choice.choice_text}}"] = [];
@@ -145,19 +159,17 @@
 			structureReponse["{{ reponse.choice.choice_text }}"].push("{{ reponse.nom|upper }}");
 		{% endfor %}
 
-		var content = [];
-		structureReponse.forEach(function(index, vals) {
-			var dataRow = [];
-
-			columns.forEach(function(column) {
-				dataRow.push(row[column].toString());
-			})
-
-			body.push(dataRow);
-    	});
-
+		var entete = [];
+		var body = [];
+		for (var index in structureReponse) {
+			entete.push({ text: index, style: 'reponse'});
+			body.push({ ul: structureReponse[index]});			
+		}
 
 		var docDefinition = {
+			footer: function(currentPage, pageCount) { 
+				return { text: "Page "+currentPage.toString()+' / ' + pageCount , alignment: 'right', margin: [0,0,20,25] };
+			},
 			content: [
 				{ 
 					text: '{{ question.question_text }}', 
@@ -165,55 +177,36 @@
 					alignment: 'center' 
 				},
 				{
-					text: " "
+					text: "\n"
 				},
 				{
-					text: 'Listes des résultats trié par ordre alphabétique',
-					style: 'header',
-					bold: false
+					text: 'Listes des résultats triés par ordre alphabétique',
+					style: 'titre'
 				},
 				{
-					columns: [
-						{
-							text: "Choix 1",
-						},
-						{
-							text: "Choix 1",
-						},
-						{
-							text: "Choix 2",
-						}
-					]
+					text: "\n"
 				},
 				{
-					columns: [
-						{
-							ul: [
-								'item 1',
-								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
-							]
-						},
-						{
-							ul: [
-								'item 1',
-								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
-							]
-						},
-						{
-							text: "Choix 2",
-							ul: [
-								'item 1',
-								'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Malit profecta versatur nomine ocurreret multavit',
-							]
-						}
-					]
+					columns: entete
+				},
+				{
+					columns: body
 				},
 			],
 			styles: {
 				header: {
-					fontSize: 18,
+					fontSize: 30,
 					bold: true,
 					alignment: 'justify'
+				},
+				reponse: {
+					fontSize: 16,
+					bold: true,
+					margin: [5,5,5,5]
+				},
+				titre: {
+					fontSize: 22,
+					alignment: 'left'
 				}
 			}
 		};

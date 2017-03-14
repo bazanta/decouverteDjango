@@ -18,7 +18,7 @@
 		<!-- FICHIERS CSS -->
 		{% load static %}
 		{% block stylsheet %}
-			<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}" />
+			<link rel="stylesheet" type="text/css" href="{% static 'polls/layout.css' %}" />
 		{% endblock stylsheet %}
 	</head>
 
@@ -56,6 +56,13 @@
 								</span>								
 							</a>
 						</li>
+						<li {% block menuAdmin %} {% endblock menuAdmin %}>
+							<a href="{% url 'admin:index' %}">
+								<span class="fa fa-cog">
+									admin
+								</span>								
+							</a>
+						</li>	
 				 	</ul>
 				</div>
 		  	</div>

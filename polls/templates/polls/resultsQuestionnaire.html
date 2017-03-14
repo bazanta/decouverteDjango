@@ -20,12 +20,12 @@
 			<h2>Récapitulatif des dernières réponses</h2>
 
 			<div>
-				{% if questionnaire.reponsequestionnaires_set.all|length > 1 %}
+				{% if questionnaire.reponsequestionnaires_set.all|length >= 1 %}
 					<ul>
 					{% for reponseQuest in questionnaire.reponsequestionnaires_set.all|dictsortreversed:'id'|slice:":5" %}
 						<li>
 							{{ reponseQuest.nom|upper }}
-							{% if reponseQuest.reponsequestionquestionnaire_set.all|length > 1 %}
+							{% if reponseQuest.reponsequestionquestionnaire_set.all|length >= 1 %}
 							<ul>
 								{% for reponse in reponseQuest.reponsequestionquestionnaire_set.all %}
 									<li>
@@ -54,8 +54,8 @@
 			</a>
 		</div>
 
-		<div class="col-lg-12">
-			<h2> Boite à moustache des poids actuels </h2>
+		<div class="col-lg-12 hide" id="graph">
+			<h2> Boite à moustache des poids </h2>
 
 			<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
 		</div>
@@ -66,71 +66,208 @@
 
 
 {% block javascript %}
+<!-- highcharts (generation de graphique) -->
 <script src="https://code.highcharts.com" type="text/javascript"></script>
 <script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
 <script src="https://code.highcharts.com/modules/data.js" type="text/javascript"></script>
+<script src="https://code.highcharts.com/highcharts-more.js" type="text/javascript"></script>
 <script src="https://code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
+
+<!-- pdfmake (generation de PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.26/pdfmake.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.26/vfs_fonts.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 
 	// Après le chargement du DOM
 	$(function(){
+				
+		/************************/
+		/* Gestion du graphique */
+		/************************/
 		
-		Highcharts.chart('container', {
-			chart: {
-				type: 'boxplot'
-			},
+		var questions = [];
+		var Allreponses = [];
+		{% for question in questionnaire.questionquestionnaire_set.all %}
+			var quest = "{{question.question}}";
+			var position = quest.indexOf("poids");
+			if (position != -1) {
+				questions.push(quest);
+			}
+			Allreponses[quest] = [];
+		{% endfor %}
+		
+		/* Si il y a une question parlant de poids, création du graphique */
+		if (questions.length >= 1 ) {
 
-			title: {
-				text: 'Boite à moustache des poids actuels'
-			},
+			$('#graph').toggleClass("hide");
 
-			legend: {
-				enabled: false
-			},
-
-			xAxis: {
-				categories: ['1'],
-				title: {
-				    text: ''
-				}
-			},
-
-			yAxis: {
-				title: {
-				    text: 'Poids en kg'
-				}
-			},
-
-			series: [
-				{
-					name: 'Poids',
-					data: [
-						[760, 801, 848, 895, 965],
-					],
-				},
-				{
-					name: 'Outlier',
-					color: Highcharts.getOptions().colors[0],
-					type: 'scatter',
-					data: [ // x, y positions where 0 is the first category
-						[0, 644],
-					],
-					marker: {
-						fillColor: 'white',
-						lineWidth: 1,
-						lineColor: Highcharts.getOptions().colors[0]
-					},
-					tooltip: {
-						pointFormat: 'Poids: {point.y}'
+			{% for reponseQuest in questionnaire.reponsequestionnaires_set.all %}
+				{% for reponse in reponseQuest.reponsequestionquestionnaire_set.all %}
+					var rep = "{{reponse.reponse}}";
+					if(isNaN(rep) == false && rep != "")
+					{
+						Allreponses["{{ reponse.question }}"].push(rep);
 					}
-				}
-			]
+				{% endfor %}
+			{% endfor %}
 
+			var reponses = [];
+			var i = 0;
+			while (i < questions.length) {
+				reponses.push(Allreponses[questions[i]]);
+				i++;
+			}
+
+			var mesData = [];
+			for (var serie in reponses) {
+				var nombres = reponses[serie].map(parseFloat);
+				var serieTri = numSort(nombres);
+				console.log(serieTri);
+				var stat = [];
+				stat.push(min(serieTri));
+				stat.push(q1(serieTri));
+				stat.push(mediane(serieTri));
+				stat.push(q3(serieTri));
+				stat.push(max(serieTri));
+				mesData.push(stat);
+			}
+
+			Highcharts.chart('container', {
+				chart: {
+					type: 'boxplot'
+				},
+				title: {
+					text: 'Résultat du questionnaire : '+'{{ questionnaire.label }}'
+				},
+				legend: {
+					enabled: false
+				},
+				xAxis: {
+					categories: questions,
+					title: {
+						text: 'questions'
+					}
+				},
+				yAxis: {
+					title: {
+						text: 'Poids'
+					}
+				},
+				series: [{
+					name: 'Observations',
+					data: mesData,
+					tooltip: {
+						headerFormat: 'Question {point.key} <br />'
+					}
+				}]
+			});	
+		}
+		
+		/******************/
+		/* Gestion du PDF */
+		/******************/
+		
+		var structureReponse = [];
+		{% for reponseQuest in questionnaire.reponsequestionnaires_set.all|dictsort:'nom' %}
+			structureReponse["{{ reponseQuest.nom }}"] = [];
+			{% for reponse in reponseQuest.reponsequestionquestionnaire_set.all %}
+				structureReponse["{{ reponseQuest.nom }}"].push("{{ reponse.question }} - {{ reponse.reponse }}");
+			{% endfor %}
+		{% endfor %}
+
+		var entete = [];
+		var body = [];
+		for (var index in structureReponse) {
+			body.push({ text: index, style: 'reponse'});
+			body.push({ ul: structureReponse[index], style: 'list'});
+			body.push({text: "\n"});		
+		}
+
+		var docDefinition = {
+			footer: function(currentPage, pageCount) { 
+				return { text: "Page "+currentPage.toString()+' / ' + pageCount , alignment: 'right', margin: [0,0,20,25] };
+			},
+			content: [
+				{ 
+					text: '{{ questionnaire.label }}', 
+					style: 'header', 
+					alignment: 'center' 
+				},
+				{text: "\n"},
+				{
+					text: 'Résultats triés par ordre alphabétique',
+					style: 'titre'
+				},
+				{text: "\n"},
+				body
+			],
+			styles: {
+				header: {
+					fontSize: 30,
+					bold: true,
+					alignment: 'justify'
+				},
+				reponse: {
+					fontSize: 12,
+					bold: true,
+					margin: [5,5,5,5]
+				},
+				list: {
+					fontSize: 12,
+				},
+				titre: {
+					fontSize: 22,
+					alignment: 'left'
+				}
+			}
+		};
+
+		$("#resultatPDF").click(function(){
+			pdfMake.createPdf(docDefinition).download('questionnaire.pdf');
 		});
-	
-	
+		
+		
+		
 	});
+	
+	/*************/
+	/* Fonctions */
+	/*************/
+
+	function numSort(tab) { 
+        var en_cours;     
+        for (var i = 1; i < tab.length; i++) {
+            en_cours = tab[i];
+            for (var j = i; j > 0 && tab[j-1] > en_cours; j--) {
+                tab[j] = tab[j-1];
+            }
+            tab[j] = en_cours;
+        }
+		return tab;
+    }
+	function min(serie) {
+		return parseFloat(serie[0]);
+	}
+	function max(serie) {
+		return parseFloat(serie[serie.length-1]);
+	}
+	function q1(serie) {
+		var quartil = Math.ceil( (serie.length-1)/4 );
+		return parseFloat(serie[quartil]);
+	}
+	function q3(serie) {
+		var rang = Math.ceil( ((serie.length-1)/4)*3 );
+		return parseFloat(serie[rang]);
+	}
+	function mediane(serie) {
+		var milieu = Math.ceil( (serie.length-1)/2 );
+		if ( (serie.length) % 2 == 1) {
+            return parseFloat(serie[milieu]);
+        } else {
+            return ( (parseFloat(serie[milieu-1]) + parseFloat(serie[milieu]))/2.0);
+        }
+	}
 
 </script>
 {% endblock javascript %}

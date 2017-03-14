@@ -11,7 +11,7 @@
 			<h1>{{ questionnaire.label}}</h1>
 		</div>
 
-		<div class="col-lg-12">
+		<div id="erreurs" class="col-lg-12">
 		{% if error_message %}
 			<p>
 				<strong>{{ error_message }}</strong>
@@ -22,20 +22,32 @@
 		<div class="col-lg-12">
 			<form action="{% url 'polls:reponseQuestionnaire' questionnaire.id %}" method="post">
 				{% csrf_token %}
-				{% for question in questionnaire.questionquestionnaire_set.all %}					
-					<div class="row">
-						<label for="quest{{ forloop.counter }}">
-							{{ question.question }}
-						</label>		
-						<input type="text" name="reponse{{ question.id }}" id="reponse{{ forloop.counter }}" value="" />					
+				<div id="questionnaire" class="row">
+					<div class="col-lg-12">
+						{% for question in questionnaire.questionquestionnaire_set.all %}					
+							<div class="row">
+								<div class="col-lg-3">
+									<label for="quest{{ forloop.counter }}">
+										{{ question.question }}
+									</label>
+								</div>
+								<div class="col-lg-9">		
+									<input type="text" name="reponse{{ question.id }}" id="reponse{{ forloop.counter }}" value="" />					
+								</div>
+							</div>
+						{% endfor %}
 					</div>
-				{% endfor %}
+				</div>
 
 				<div id="identification" class="row">
-					<label for="nom">
-						Entrer votre nom
-					</label>
-					<input type="text" name="nom" id="nom" value="" />
+					<div class="col-lg-3">
+						<label for="nom">
+							Entrer votre nom
+						</label>
+					</div>
+					<div class="col-lg-9">
+						<input type="text" name="nom" id="nom" value="" />
+					</div>
 				</div>
 
 				<div class="row" id="actions">
@@ -47,3 +59,31 @@
 	</div>
 </div>
 {% endblock page %}
+
+{% block javascript %}
+
+<script type="text/javascript">
+
+	// Après le chargement du DOM
+	$(function(){
+		
+		$('input[type="submit"]').click(function(e){
+			var erreur = false;
+			$('input[name^="reponse"]').each(function(){
+				if($(this).val() == '') {
+					erreur = true;
+				}
+			});
+			if (erreur) {
+				$('div#erreurs').append(
+					"<p><strong>Veuillez renseigner une valeur pour chaque question!</strong></p>"
+				);
+				e.preventDefault();
+			}
+		});
+
+	});
+
+</script>
+
+{% endblock javascript %}
